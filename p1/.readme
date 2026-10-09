@@ -1,0 +1,9 @@
+vagrant up --provider=virtualbox     
+
+vagrant ssh jmafueniSW
+vagrant ssh jmafueniS
+ip -4 addr
+
+
+vagrant ssh jmafueniS -c "sudo kubectl get nodes -o wide"
+sudo kubectl get pods -A
