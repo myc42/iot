@@ -1,26 +1,89 @@
-Une réplique, c'est simplement une copie identique de votre application (du même Pod).
-on n'utilise jamais les adresses IP des Pods directement dans le code ou la configuration.
+Kubernetes classique (K8s) est un monstre de puissance conçu pour faire tourner des milliers d'applications dans de gigantesques datacenters cloud. Le problème, c'est que pour faire tourner ce monstre, il faut plusieurs serveurs très puissants et beaucoup de mémoire vive (RAM) juste pour gérer le système lui-même, avant même d'y ajouter ta propre application.
+K3s a été créé par l'entreprise Rancher pour répondre à un besoin précis : comment profiter de l'automatisation de Kubernetes quand on n'a ni datacenter, ni équipe d'ingénieurs dédiée, ni serveurs coûtant des milliers d'euros ? Ils ont pris le code source de Kubernetes, ont supprimé tout le code mort (les vieux plugins cloud inutiles) et ont emballé l'essentiel dans un format ultra-léger.
+Tu veux héberger ton site web, ton API et une base de données personnelle sur un petit serveur loué 5€ par mois. Si tu installes le Kubernetes classique, il va consommer 95% de la mémoire du serveur juste pour exister, et ton serveur va planter. K3s consomme environ 500 Mo de RAM. Il te laisse presque toute la place pour faire tourner tes vraies applications tout en t'offrant une architecture de pro.
 
-for n in app1 app2 app3; do cat > $n/Dockerfile <<'EOF' FROM nginx:alpine COPY index.html /usr/share/nginx/html/index.html EOF done
+tu utiliseras exactement la même commande que les pros (kubectl). Les 80% de ton travail consisteront à créer des Pods (les boîtes qui font tourner ton code), des Déploiements (pour dire à K3s combien de copies de ta boîte tu veux) et des Services / Ingress (pour ouvrir les portes d'internet vers ton application via Traefik). Tu peux totalement ignorer la gestion des certificats internes, l'api-server ou le scheduler : K3s gère cette mécanique dans l'ombre.
 
+une confusion très classique quand on débute, car dans le langage courant des développeurs, "déployer un site" signifie le mettre en ligne. En informatique, déployer veut dire prendre une application et la faire tourner dans un environnement. Ça ne veut pas dire « la mettre sur Internet ». Le déploiement répond à la question « est-ce que mon app tourne ? », pas à « est-ce que le monde peut y accéder ? ».Dans le vocabulaire strict de Kubernetes, un Déploiement est le manager ou le chef d'équipe de ton application.Au lieu de lancer ton application manuellement et de prier pour qu'elle ne plante pas, tu rédiges un contrat (le fichier de Déploiement) que tu donnes à K3s. Dans ce contrat, tu lui dis : "Voici mon application, et je veux qu'il y en ait très exactement 3 copies (réplicas) allumées en permanence."
+l'étape zéro, celle qui se passe avant même de toucher à Kubernetes.
+K3s est un lecteur DVD d'une puissance incroyable. Mais un lecteur DVD ne fabrique pas de films, il ne fait que les lire. Avant de demander à K3s de lancer ton application, tu dois "graver ton film sur un disque". Ce disque prêt à l'emploi, c'est ce qu'on appelle l'Image.
 
+Dans K3s, le travail est découpé en pièces de puzzle très précises :
+Le Déploiement s'assure que ton code tourne et reste en vie (tes travailleurs).
+Le Service joue le rôle de standardiste interne. Il distribue le travail équitablement entre toutes tes copies actives pour ne pas en surcharger une seule.
+L'Ingress est la véritable porte vers l'extérieur. C'est lui qui dit : "Si un visiteur tape [www.monsite.com](https://www.monsite.com) dans son navigateur, ouvre la porte d'internet et envoie-le vers le Service, qui l'enverra vers l'une des copies gérées par le Déploiement."
 
-docker save mon-app:1.0 -o mon-app.tar
-sudo k3s ctr -n k8s.io images import mon-app.tar
+L’ordre : Deployment, puis Service, puis Ingress
+Chaque objet dépend de celui qui le précède. Tu ne peux pas comprendre l’un sans avoir vu l’autre.
+1. Le Deployment en premier
+C’est lui qui crée les Pods, c’est-à-dire ton application elle-même. Sans lui, il n’y a rien à joindre ni à exposer : un Service sans Pod derrière est une adresse qui mène nulle part.
+Pendant cette étape, tu apprendras aussi ce qu’est un Pod, puisque le Deployment en fabrique. Pas besoin de l’étudier à part.
+Le Déploiement crée tes "Pods" (les petites boîtes contenant ton code). Le problème technique majeur dans K3s, c'est que ces Pods sont éphémères et jetables. S'il y a un bug ou une mise à jour, K3s détruit le Pod et en recrée un nouveau. À chaque fois qu'un Pod naît, il reçoit une nouvelle adresse IP interne. Il est donc impossible de s'y connecter directement de façon fiable, d'où la nécessité de l'étape 2.
 
-Vérifie le résultat :
+Ce que tu vérifies à la fin : kubectl get pods montre tes Pods qui tournent, et si tu en supprimes un, il revient tout seul.
+2. Le Service ensuite
+Pourquoi en deuxième ? Parce qu'il vient régler le problème des adresses IP instables créées par le Déploiement.
+Les Pods ont un défaut : ils sont éphémères. Quand un Pod est recréé, il change d’adresse IP. Le Service règle ce problème en donnant une adresse stable qui trouve les bons Pods grâce à leurs labels (l’étiquette app: mon-nginx du YAML précédent).
+Il faut donc comprendre le Deployment d’abord : le Service a besoin de Pods existants et de leurs labels pour fonctionner.
+Ce que tu vérifies à la fin : tu peux joindre ton app par le nom du Service depuis l’intérieur du cluster, même après avoir supprimé un Pod.
+3. L’Ingress en dernier
+Pourquoi en dernier ? Parce qu'il a besoin d'une cible stable (le Service) vers laquelle envoyer les visiteurs extérieurs.
+L’Ingress ne parle jamais directement aux Pods. Il envoie le trafic web extérieur vers un Service (« mon-site.local va vers le Service mon-nginx »). Sans Service, il n’a aucune cible.
+C’est aussi l’étape la plus riche : elle fait intervenir Traefik, les noms de domaine, le DNS et le réseau. C’est plus facile quand les deux premières sont acquises.
+Ce que tu vérifies à la fin : tu ouvres ton app dans un navigateur avec un nom.
 
-sudo k3s ctr -n k8s.io images ls | grep mon-app
-sudo k3s crictl images | grep mon-app
-L’Ingress définit les règles de routage HTTP vers tes applications Kubernetes. Traefik est un logiciel qui peut lire et appliquer ces règles.
+L'Ingress est le seul de ces trois éléments qui comprend le langage d'internet : les noms de domaine (comme ton-projet.com) et le HTTPS. Son rôle est d'écouter tout le trafic public qui frappe à la porte de ton serveur et d'appliquer une règle de circulation stricte : "Si la requête vient pour le domaine ton-projet.com, alors laisse entrer et envoie le trafic vers l'adresse IP fixe du Service correspondant."
+Plongeons dans l'étape 1 : Le Déploiement.
+Dans ton quotidien (les 80% des cas), tu vas ordonner à K3s de créer ce Déploiement en lui donnant un simple fichier texte (un fichier YAML) qui contient trois informations vitales :
+L'image : Le nom de la boîte (généralement une image Docker) qui contient ton code prêt à l'emploi.
+Les réplicas : Le nombre exact de copies de cette boîte que tu veux allumer.
+Le port conteneur : Le numéro de la porte par laquelle ton code écoute à l'intérieur de sa boîte (très souvent 80, 8080 ou 3000).
 
-K3s installe généralement Traefik par défaut : tu n’as donc pas forcément besoin d’installer Nginx.
+L’image : le travail qui précède le Deployment
+Tu ne te trompes pas. Oui, il y a un travail en amont : le Deployment ne crée pas ton application, il ne fait que la lancer. Il faut donc que l’application existe déjà, sous forme d’image.
+C’est quoi une image ?
+Une image est un paquet figé qui contient ton application et tout ce dont elle a besoin pour tourner (système minimal, librairies, config). Elle ne tourne pas, elle attend.
+Image = la recette complète, congelée
 
+Voici exactement le travail que tu dois faire en amont (les 80% du quotidien d'un développeur) :
+1. Coder ton application : Tu écris ton code normalement sur ton ordinateur (en NodeJS, Python, PHP, etc.).
+2. Emballer ton code (Docker) : K3s ne sait pas lire du code brut. Il ne comprend que les "conteneurs". Tu vas donc utiliser un outil très standard (comme Docker) pour emballer ton code dans une boîte hermétique. Cette boîte (l'Image) fige ton code avec absolument tout ce dont il a besoin pour tourner.
+3. Stocker cette Image en ligne (Le Registre) : Une fois ta boîte créée, elle est sur ton ordinateur portable. K3s, qui est sur un serveur, ne peut pas la deviner. Tu vas donc envoyer ("pousser") ton Image sur un catalogue en ligne gratuit, comme le Docker Hub (qui est l'équivalent de l'App Store ou du Play Store, mais pour les images de code).
+Quand tu crées ton fichier texte YAML pour le Déploiement, tu vas simplement donner à K3s le nom de ton Image sur ce catalogue public
+K3s va lire cette instruction, aller sur internet (sur le Docker Hub), télécharger l'Image que tu as fabriquée, la déballer, et l'allumer (ce qui devient ton fameux Pod). Si tu lui as demandé 3 réplicas, il va télécharger l'Image une fois, et l'allumer trois fois en parallèle.
+Pour utiliser une métaphore : l'Image est le disque de ton jeu vidéo, et le Pod est la console allumée avec le jeu qui tourne dedans.
+Dans Kubernetes, le Pod est la plus petite brique manipulable. K3s refuse de parler directement à une image allumée (un conteneur) "nue". Il a besoin de l'emballer dans un Pod, car c'est sur cette coquille externe qu'il va brancher une adresse IP et coller des étiquettes pour organiser le réseau.
+Techniquement, il est tout à fait possible de demander à K3s de créer un Pod "nu" (sans Déploiement), mais dans ton quotidien (les 80% des cas), on ne le fait pratiquement jamais pour faire tourner une application.
+Si tu crées un Pod tout seul et que ton application plante (ou que le serveur redémarre), ton Pod meurt et disparaît pour toujours. Personne ne viendra le ressusciter. K3s n'a reçu aucun ordre pour le maintenir en vie, tu perds donc le super-pouvoir d'"auto-réparation". C'est un Pod orphelin.
+C'est pour cela qu'il faut toujours le faire via le Déploiement. Comme tu l'as vu dans le code précédent, la "recette" pour fabriquer le Pod (l'image et le port) est directement imbriquée à l'intérieur du fichier YAML du Déploiement (dans la sous-section template). Le Déploiement devient son parent protecteur.
+Il n'y a qu'une seule exception où créer un Pod seul est utile : le dépannage (debug).
 
-importer les images dans containerd
+Écrire les 3 fichiers YAML
+Le squelette commun
+Les trois fichiers ont la même structure en 4 blocs :
+apiVersion: ...   # la "version du langage" pour ce type d'objet
+kind: ...         # le type d'objet (Deployment, Service, Ingress)
+metadata:         # l'identité : au minimum un name
+  name: ...
+spec:             # la description de ce que tu veux (c'est ici que tout change)
+  ...
+Ce qui change d’un fichier à l’autre :
+ Le Déploiement : On demande à K3s de télécharger l'image et d'allumer 2 Pods. La chose la plus importante ici, c'est l'étiquette qu'on va coller sur nos Pods.
+spec contient : l’image, le nombre de copies, les labels
+Le Service  : On crée l'adresse IP fixe interne. Ce qui change, c'est le kind (qui devient Service). Ce qu'on rajoute d'essentiel, c'est le Sélecteur. Le Service a besoin de savoir à qui envoyer le trafic.
+spec contient : quels Pods viser, quels ports
+L'Ingress : On crée la règle de routage pour Traefik (le routeur de K3s). Le kind devient Ingress. On ne parle plus d'étiquettes ici. L'Ingress connecte simplement une URL publique au nom du Service.
+spec contient : quel nom de domaine, vers quel Service
+Comment lancer ces fichiers ?
+Le grand avantage de K3s, c'est que tu utilises exactement le même outil que pour le Kubernetes des multinationales : la commande kubectl (qui signifie Kubernetes Control).
+Que tu aies mis ces trois blocs dans 3 fichiers séparés, ou dans un seul gros fichier séparé par des ---, la commande est toujours la même.
+Tu ouvres ton terminal là où se trouvent tes fichiers, et tu tapes :
+kubectl apply -f mon-deploiement.yaml kubectl apply -f mon-service.yaml kubectl apply -f mon-ingress.yaml
+(Le paramètre -f signifie "file" / fichier).
+L'ordre de lancement importe-t-il vraiment ? Logiquement, tu fais 1, puis 2, puis 3. Mais la magie de Kubernetes, c'est qu'il est asynchrone et intelligent. Si tu lances le Service avant le Déploiement, K3s ne va pas planter. Il va créer le Service, le Service va chercher l'étiquette app: super-site, ne rien trouver, et attendre patiemment. Quand tu lanceras le Déploiement 10 secondes plus tard, le Service verra les Pods apparaître et se connectera dessus automatiquement.
 
-sudo docker save app2:1.1 | sudo k3s ctr images import -
-sudo docker save app3:1.1 | sudo k3s ctr images import -
+Tout peut (et doit !) être scripté. En réalité, se connecter à la machine virtuelle (SSH) pour taper manuellement kubectl apply, on ne le fait que lorsqu'on apprend, ou quand il y a une grosse panne à réparer.
+Dans le vrai monde (les 80% des cas en entreprise), l'objectif de Kubernetes est de ne jamais avoir à se connecter sur le serveur.
 
-sudo kubectl get pods 
-
+Pour dire à Kubernetes "Attention, je passe à un autre composant", on utilise un séparateur universel en YAML : trois tirets (---).
+Kubernetes est très strict sur les noms : les majuscules sont interdites.

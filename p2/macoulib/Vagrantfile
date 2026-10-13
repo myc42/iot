@@ -1,18 +1,18 @@
 Vagrant.configure("2") do |config|
+  config.vm.box = "bento/ubuntu-24.04"
 
-    config.vm.box = "bento/ubuntu-24.04"
+  config.vm.define "macoulibS" do |vm|          
+    vm.vm.hostname = "macoulibS"
+    vm.vm.network "private_network", ip: "192.168.56.110"
 
-    config.vm.define "jmafueniS" do |server|
-        server.vm.hostname = "jmafueniS"
-        server.vm.network "private_network", ip: "192.168.56.110"
-
-        server.vm.provider "virtualbox" do |v|
-            v.memory = 1024
-            v.cpus = 1
-        end
-
-        server.vm.provision "shell", path: "scripts/setup.sh"
+    vm.vm.provider "virtualbox" do |v|
+      v.name = "macoulibS"
+      v.memory = 2048
+      v.cpus = 2
     end
 
- 
+    vm.vm.provision "shell", path: "script/created_3app.sh"
+    vm.vm.provision "shell", path: "script/installdockerk3s.sh"
+    vm.vm.provision "shell", path: "script/k3sconfig.sh"
+  end
 end

@@ -11,7 +11,7 @@ spec:
         number: 80
   rules:
   # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
-  - host: www.app1.com # Exemple : app1.test.local
+  - host: app1.com # Exemple : app1.test.local
     http:
       paths:
       - path: /
@@ -24,7 +24,7 @@ spec:
               number: 80 # Le port "port:" de ton Service (80 si tu as suivi mon conseil)
 
   # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
-  - host: www.app2.com  # Exemple : app1.test.local
+  - host: app2.com  # Exemple : app1.test.local
     http:
       paths:
       - path: /
@@ -37,7 +37,7 @@ spec:
               number: 80 #Le port "port:" de ton Service (80 si tu as suivi mon conseil)
 
   # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
-  - host: www.app3.com  # Exemple : app1.test.local
+  - host: app3.com  # Exemple : app1.test.local
     http:
       paths:
       - path: /
