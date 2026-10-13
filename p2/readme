@@ -1,0 +1,26 @@
+Une réplique, c'est simplement une copie identique de votre application (du même Pod).
+on n'utilise jamais les adresses IP des Pods directement dans le code ou la configuration.
+
+for n in app1 app2 app3; do cat > $n/Dockerfile <<'EOF' FROM nginx:alpine COPY index.html /usr/share/nginx/html/index.html EOF done
+
+
+
+docker save mon-app:1.0 -o mon-app.tar
+sudo k3s ctr -n k8s.io images import mon-app.tar
+
+Vérifie le résultat :
+
+sudo k3s ctr -n k8s.io images ls | grep mon-app
+sudo k3s crictl images | grep mon-app
+L’Ingress définit les règles de routage HTTP vers tes applications Kubernetes. Traefik est un logiciel qui peut lire et appliquer ces règles.
+
+K3s installe généralement Traefik par défaut : tu n’as donc pas forcément besoin d’installer Nginx.
+
+
+importer les images dans containerd
+
+sudo docker save app2:1.1 | sudo k3s ctr images import -
+sudo docker save app3:1.1 | sudo k3s ctr images import -
+
+sudo kubectl get pods 
+

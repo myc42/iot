@@ -1,0 +1,75 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # 1. IDENTITÉ DU DÉPLOIEMENT
+  name: app1-deployment
+spec:
+  # 2. LE CONTRAT
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1 # C'est le radar : il cherchera les Pods avec cette étiquette
+      
+  # 3. LA RECETTE DU POD (Le moule à gaufres)
+  template:
+    metadata:
+      labels:
+        app: app1 # On colle l'étiquette sur le Pod
+    spec:
+      containers:
+      - name: projet-app1
+        image: projet-app1:latest
+        ports:
+        - containerPort: 80
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # 1. IDENTITÉ DU DÉPLOIEMENT
+  name: app2-deployment
+spec:
+  # 2. LE CONTRAT
+  replicas: 3
+  selector:
+    matchLabels:
+      app: app2 # C'est le radar : il cherchera les Pods avec cette étiquette
+      
+  # 3. LA RECETTE DU POD (Le moule à gaufres)
+  template:
+    metadata:
+      labels:
+        app: app2 # On colle l'étiquette sur le Pod
+    spec:
+      containers:
+      - name:  projet-app2
+        image: projet-app2:latest
+        ports:
+        - containerPort: 80
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # 1. IDENTITÉ DU DÉPLOIEMENT
+  name: app3-deployment
+spec:
+  # 2. LE CONTRAT
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app3 # C'est le radar : il cherchera les Pods avec cette étiquette
+      
+  # 3. LA RECETTE DU POD (Le moule à gaufres)
+  template:
+    metadata:
+      labels:
+        app: app3 # On colle l'étiquette sur le Pod
+    spec:
+      containers:
+      - name:  projet-app3
+        image: projet-app3:latest
+        ports:
+        - containerPort: 80

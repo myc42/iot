@@ -1,0 +1,50 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  # 1. IDENTITÉ DE L'INGRESS
+  name: firstingress # Exemple : ingress-app-1
+spec:
+  defaultBackend:
+    service:
+      name: app3-service
+      port:
+        number: 80
+  rules:
+  # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
+  - host: www.app1.com # Exemple : app1.test.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # 3. LE LIEN MAGIQUE AVEC LE SERVICE
+            name: app1-service # TRÈS IMPORTANT : Le "metadata.name" exact de l'étape 2 !
+            port:
+              number: 80 # Le port "port:" de ton Service (80 si tu as suivi mon conseil)
+
+  # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
+  - host: www.app2.com  # Exemple : app1.test.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # 3. LE LIEN MAGIQUE AVEC LE SERVICE
+            name: app2-service # TRÈS IMPORTANT : Le "metadata.name" exact de l'étape 2 !
+            port:
+              number: 80 #Le port "port:" de ton Service (80 si tu as suivi mon conseil)
+
+  # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
+  - host: www.app3.com  # Exemple : app1.test.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # 3. LE LIEN MAGIQUE AVEC LE SERVICE
+            name: app3-service # TRÈS IMPORTANT : Le "metadata.name" exact de l'étape 2 !
+            port:
+              number: 80  # Le port "port:" de ton Service (80 si tu as suivi mon conseil)

@@ -1,0 +1,2 @@
+K3s est une version légère de Kubernetes. Il permet de déployer tes applications dans des conteneurs,
+ de gérer leurs pods et de maintenir  le nombre de réplicas souhaité.

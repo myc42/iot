@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  # 1. IDENTITÉ DU SERVICE
+  name: <CHOISIS_UN_NOM_POUR_CE_SERVICE> # Exemple : service-app-1
+spec:
+  # 2. LE RADAR (Le lien magique avec le Déploiement)
+  selector:
+    app: <L_ETIQUETTE_EXACTE_DU_DEPLOIEMENT> # TRÈS IMPORTANT : Doit être exactement le même mot que tu as mis dans le "matchLabels" de ton Déploiement !
+  
+  # 3. LA GESTION DES PORTES
+  ports:
+    - port: <LE_PORT_DU_SERVICE> # La porte d'entrée de ce Service (en général, on met 80 pour le web)
+      targetPort: <LE_PORT_INTERNE_DU_CONTENEUR> # Le port de ton app (celui que tu avais mis dans containerPort, donc 80)

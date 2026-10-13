@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  # 1. IDENTITÉ DU DÉPLOIEMENT
+  name: <CHOISIS_UN_NOM_POUR_LE_DEPLOIEMENT>
+spec:
+  # 2. LE CONTRAT
+  replicas: <COMBIEN_DE_COPIES_VEUX_TU>
+  selector:
+    matchLabels:
+      app: <CHOISIS_UNE_ETIQUETTE> # C'est le radar : il cherchera les Pods avec cette étiquette
+      
+  # 3. LA RECETTE DU POD (Le moule à gaufres)
+  template:
+    metadata:
+      labels:
+        app: <LA_MEME_ETIQUETTE_QU_AU_DESSUS> # On colle l'étiquette sur le Pod
+    spec:
+      containers:
+      - name: <CHOISIS_UN_NOM_POUR_LE_CONTENEUR>
+        image: <LE_NOM_EXACT_DE_TON_IMAGE_DANS_K3S>
+        ports:
+        - containerPort: <LE_PORT_INTERNE_DU_CONTENEUR>
+
+
+PS : 
+SI PAR DEFAUT TU UTILISE LATEST A LA FIN DE TON APP 
+TU RAJOUTE CETTE LIGNE  IL DIT La solution : La ligne magique
+Il faut donner un ordre strict à Kubernetes : "Ne va jamais chercher sur internet, utilise uniquement l'image que tu as en stock".
+
+
+imagePullPolicy: Never       # <-- AJOUTE CETTE LIGNE ICI

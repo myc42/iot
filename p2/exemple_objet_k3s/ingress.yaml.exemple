@@ -1,0 +1,36 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  # 1. IDENTITÉ DE L'INGRESS
+  name: <CHOISIS_UN_NOM_POUR_CET_INGRESS> # Exemple : ingress-app-1
+spec:
+  rules:
+  # 2. LA RÈGLE DE CIRCULATION (L'adresse web)
+  - host: <L_URL_POUR_ACCEDER_A_TON_APP> # Exemple : app1.test.local
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            # 3. LE LIEN MAGIQUE AVEC LE SERVICE
+            name: <LE_NOM_EXACT_DU_SERVICE_PRECEDENT> # TRÈS IMPORTANT : Le "metadata.name" exact de l'étape 2 !
+            port:
+              number: <LE_PORT_DU_SERVICE> # Le port "port:" de ton Service (80 si tu as suivi mon conseil)
+
+
+
+PS : 
+Un seul composant Ingress est capable de gérer une table de routage complète contenant plusieurs noms de domaine (hosts) à la fois.
+Pour les Déploiements et Services : Tu devais créer un bloc séparé avec son en-tête (apiVersion, kind, metadata) pour chaque application, car ce sont des éléments indépendants dans le cluster (images différentes, réplicas différents, IP internes différentes).
+Pour l'Ingress : L'Ingress est le portail d'entrée unique de ton cluster (géré par Traefik dans K3s). Au lieu de fabriquer 3 portails distincts, on configure un seul portail en lui donnant une liste de règles (rules).
+
+la ligne name: sous backend.service sert à dire à Kubernetes : "Quand quelqu'un tape cette URL, redirige-le vers ce Service exact".
+
+
+pour rajouter par defaut # ROUTE PAR DÉFAUT : Si le Host n'est ni app1.com ni app2.com -> App 3
+defaultBackend:
+    service:
+      name: app3-service
+      port:
+        number: 80
