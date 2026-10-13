@@ -34,3 +34,8 @@ defaultBackend:
       name: app3-service
       port:
         number: 80
+
+
+    pour savoir que ingress est deployer 
+
+    k describe ingress firstingress

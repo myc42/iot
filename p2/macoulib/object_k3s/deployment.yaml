@@ -19,6 +19,7 @@ spec:
       containers:
       - name: projet-app1
         image: projet-app1:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
 
@@ -45,6 +46,7 @@ spec:
       containers:
       - name:  projet-app2
         image: projet-app2:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80
 
@@ -71,5 +73,6 @@ spec:
       containers:
       - name:  projet-app3
         image: projet-app3:latest
+        imagePullPolicy: IfNotPresent
         ports:
         - containerPort: 80

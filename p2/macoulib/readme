@@ -1,10 +1,18 @@
 Kubernetes classique (K8s) est un monstre de puissance conçu pour faire tourner des milliers d'applications dans de gigantesques datacenters cloud. Le problème, c'est que pour faire tourner ce monstre, il faut plusieurs serveurs très puissants et beaucoup de mémoire vive (RAM) juste pour gérer le système lui-même, avant même d'y ajouter ta propre application.
+
+
 K3s a été créé par l'entreprise Rancher pour répondre à un besoin précis : comment profiter de l'automatisation de Kubernetes quand on n'a ni datacenter, ni équipe d'ingénieurs dédiée, ni serveurs coûtant des milliers d'euros ? Ils ont pris le code source de Kubernetes, ont supprimé tout le code mort (les vieux plugins cloud inutiles) et ont emballé l'essentiel dans un format ultra-léger.
+
+
 Tu veux héberger ton site web, ton API et une base de données personnelle sur un petit serveur loué 5€ par mois. Si tu installes le Kubernetes classique, il va consommer 95% de la mémoire du serveur juste pour exister, et ton serveur va planter. K3s consomme environ 500 Mo de RAM. Il te laisse presque toute la place pour faire tourner tes vraies applications tout en t'offrant une architecture de pro.
 
 tu utiliseras exactement la même commande que les pros (kubectl). Les 80% de ton travail consisteront à créer des Pods (les boîtes qui font tourner ton code), des Déploiements (pour dire à K3s combien de copies de ta boîte tu veux) et des Services / Ingress (pour ouvrir les portes d'internet vers ton application via Traefik). Tu peux totalement ignorer la gestion des certificats internes, l'api-server ou le scheduler : K3s gère cette mécanique dans l'ombre.
 
-une confusion très classique quand on débute, car dans le langage courant des développeurs, "déployer un site" signifie le mettre en ligne. En informatique, déployer veut dire prendre une application et la faire tourner dans un environnement. Ça ne veut pas dire « la mettre sur Internet ». Le déploiement répond à la question « est-ce que mon app tourne ? », pas à « est-ce que le monde peut y accéder ? ».Dans le vocabulaire strict de Kubernetes, un Déploiement est le manager ou le chef d'équipe de ton application.Au lieu de lancer ton application manuellement et de prier pour qu'elle ne plante pas, tu rédiges un contrat (le fichier de Déploiement) que tu donnes à K3s. Dans ce contrat, tu lui dis : "Voici mon application, et je veux qu'il y en ait très exactement 3 copies (réplicas) allumées en permanence."
+une confusion très classique quand on débute, car dans le langage courant des développeurs, "déployer un site" signifie le mettre en ligne. En informatique, déployer veut dire prendre une application et la faire tourner dans un environnement. Ça ne veut pas dire « la mettre sur Internet ». Le déploiement répond à la question « est-ce que mon app tourne ? », pas à « est-ce que le monde peut y accéder ? ».
+
+Dans le vocabulaire strict de Kubernetes, un Déploiement est le manager ou le chef d'équipe de ton application.Au lieu de lancer ton application manuellement et de prier pour qu'elle ne plante pas, tu rédiges un contrat (le fichier de Déploiement) que tu donnes à K3s. Dans ce contrat, tu lui dis : "Voici mon application, et je veux qu'il y en ait très exactement 3 copies (réplicas) allumées en permanence."
+
+
 l'étape zéro, celle qui se passe avant même de toucher à Kubernetes.
 K3s est un lecteur DVD d'une puissance incroyable. Mais un lecteur DVD ne fabrique pas de films, il ne fait que les lire. Avant de demander à K3s de lancer ton application, tu dois "graver ton film sur un disque". Ce disque prêt à l'emploi, c'est ce qu'on appelle l'Image.
 
@@ -67,7 +75,11 @@ metadata:         # l'identité : au minimum un name
   name: ...
 spec:             # la description de ce que tu veux (c'est ici que tout change)
   ...
+
+
+
 Ce qui change d’un fichier à l’autre :
+
  Le Déploiement : On demande à K3s de télécharger l'image et d'allumer 2 Pods. La chose la plus importante ici, c'est l'étiquette qu'on va coller sur nos Pods.
 spec contient : l’image, le nombre de copies, les labels
 Le Service  : On crée l'adresse IP fixe interne. Ce qui change, c'est le kind (qui devient Service). Ce qu'on rajoute d'essentiel, c'est le Sélecteur. Le Service a besoin de savoir à qui envoyer le trafic.
