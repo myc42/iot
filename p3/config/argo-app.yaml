@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: iot-app
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: 'https://github.com/abllox19/iot-asoumare'
+    targetRevision: HEAD
+    path: . # Le dossier où se trouve ton deployment.yaml sur Git
+  destination:
+    server: 'https://kubernetes.default.svc'
+    namespace: dev # Le namespace où l'application va tourner
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
