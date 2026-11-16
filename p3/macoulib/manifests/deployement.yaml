@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app1
+  namespace: dev
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app1
+  template:
+    metadata:
+      labels:
+        app: app1
+    spec:
+      containers:
+        - name: app1
+          image: macoulib/app1:v1
+          ports:
+            - containerPort: 3000
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app1-service
+  namespace: dev
+spec:
+  selector:
+    app: app1
+  ports:
+    - protocol: TCP
+      port: 80         # Le port d'écoute du service
+      targetPort: 3000 # Le port 3000 de votre conteneur
+  type: ClusterIP
