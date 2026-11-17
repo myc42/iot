@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: app1
-          image: macoulib/mon-app:v1
+          image: macoulib/mon-app:v2
           ports:
             - containerPort: 80
 
