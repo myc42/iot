@@ -10,5 +10,5 @@ spec:
   ports:
     - protocol: TCP
       port: 80         # Le port d'écoute du service
-      targetPort: 3000 # Le port 3000 de votre conteneur
+      targetPort: 80 # Le port 3000 de votre conteneur
   type: ClusterIP
